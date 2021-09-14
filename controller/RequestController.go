@@ -9,12 +9,6 @@ import (
 	"net/http"
 )
 
-var funcMap = template.FuncMap{
-	"increment": func(i int) int {
-		return i + 1
-	},
-}
-
 type Controller struct {
 	Server *server.Server
 	Repo   *repository.DbCustomerRepo
@@ -40,7 +34,7 @@ func (c *Controller) initiateRoutes() {
 
 func (c *Controller) getCustomers(w http.ResponseWriter, r *http.Request) {
 
-	t, err := template.New("show.gohtml"). /*.Funcs(funcMap)*/ ParseFiles("views/show.gohtml")
+	t, err := template.New("show.gohtml").ParseFiles("views/show.gohtml")
 	customers, _ := c.Repo.ShowCustomers()
 
 	err = t.Execute(w, map[string][]repository.Customer{"customers": customers})
