@@ -28,3 +28,9 @@ Gorm: ORM library
 PQ: postgres driver 
 
 `go get github.com/lib/pq`
+
+
+MUX: server + routes
+
+`go get github.com/gorilla/mux
+`

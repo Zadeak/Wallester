@@ -2,16 +2,16 @@ package unitTest
 
 import (
 	mapper "W/repository"
-	types "W/repository"
+	repositorium "W/repository"
 	"testing"
 )
 
-var repo = types.NewCustomerRepo()
+var repo = repositorium.DbCustomerRepo{}
 
-func TestInsertCustomer(t *testing.T) {
+func TestRepository(t *testing.T) {
 	testCustomer, randomString := InitRandomCustomer(&repo)
 	customer, _ := repo.InsertCustomer(&testCustomer)
-	AssertEquals("UnitTest"+randomString, customer.FirstName, t)
+	AssertEquals("Testing_Name"+randomString, customer.FirstName, t)
 	DeleteCustomer(&customer, &repo)
 }
 
@@ -56,5 +56,5 @@ func TestFindCustomers(t *testing.T) {
 	AssertListContainsCustomer(insertedCustomer3, customers, t)
 	AssertListContainsCustomer(insertedCustomer4, customers, t)
 
-	DeleteAll(customers, &repo)
+	DeleteAllList(customers, &repo)
 }

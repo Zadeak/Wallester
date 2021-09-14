@@ -7,6 +7,11 @@ import (
 	"gorm.io/gorm"
 )
 
+type CustomerPogo struct { //Plain old Go Object
+	FirstName string
+	LastName  string
+	Email     string
+}
 type Customer struct {
 	gorm.Model
 
@@ -15,23 +20,35 @@ type Customer struct {
 	Email     string `gorm:"typevarchar(100);unique_index;unique"`
 }
 
-func (customer *Customer) ToString() string {
-	return fmt.Sprintf("ID: %v \n First name: %v \n LastName: %v", customer.ID, customer.FirstName, customer.LastName)
-}
-
-type CustomerPogo struct { //Plain old Go Object
-	FirstName string
-	LastName  string
-	Email     string
-}
-
 type DbCustomerRepo struct {
 	Db *gorm.DB
 }
 
-func NewCustomerRepo() DbCustomerRepo {
-	dbConnection := DbConnection()
-	return DbCustomerRepo{Db: dbConnection}
+func (repo *DbCustomerRepo) Initialize() {
+	dbHost := "localhost"
+	dbPort := 5432
+	dbUser := "postgres"
+	dbPass := "postgres"
+	dbName := "postgres"
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable", dbHost, dbPort, dbUser, dbPass, dbName)
+
+	db, err := gorm.Open(postgres.Open(psqlInfo), &gorm.Config{})
+
+	if err != nil {
+		panic(err.Error())
+	}
+	repo.Db = db
+	repo.migrate()
+}
+func (repo *DbCustomerRepo) migrate() {
+	err := repo.Db.AutoMigrate(&Customer{})
+	if err != nil {
+		return
+	}
+
+}
+func (customer *Customer) ToString() string {
+	return fmt.Sprintf("ID: %v \n First name: %v \n LastName: %v", customer.ID, customer.FirstName, customer.LastName)
 }
 func (repo *DbCustomerRepo) Migrate() {
 	err := repo.Db.AutoMigrate(&Customer{})
@@ -64,6 +81,12 @@ func (repo *DbCustomerRepo) FindCustomers(customerPogo *CustomerPogo) ([]Custome
 	return customers, nil
 }
 
+func (repo *DbCustomerRepo) ShowCustomers() ([]Customer, error) {
+	var customers []Customer
+	repo.Db.Find(&customers)
+	return customers, nil
+}
+
 func (repo *DbCustomerRepo) DeleteCustomer(customerPogo *CustomerPogo) error {
 	customer := Customer{}
 	repo.findCustomer(customerPogo, &customer)
@@ -74,6 +97,13 @@ func (repo *DbCustomerRepo) DeleteCustomer(customerPogo *CustomerPogo) error {
 		return nil
 	}
 
+}
+
+func (repo *DbCustomerRepo) F() []Customer {
+	var customers []Customer
+	repo.Db.Find(&customers)
+
+	return customers
 }
 
 func (repo *DbCustomerRepo) UpdateCustomer(customerPogo *CustomerPogo) (Customer, error) {

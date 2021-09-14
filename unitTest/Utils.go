@@ -26,7 +26,7 @@ func AssertListContainsCustomer(e types.Customer, s []types.Customer, t *testing
 func InitRandomCustomer(repo *types.DbCustomerRepo) (types.CustomerPogo, string) {
 	rand.Seed(time.Now().UnixNano())
 	s1 := strconv.FormatInt(rand.Int63(), 10)
-	repo.Migrate()
+	repo.Initialize()
 	testCustomer := types.CustomerPogo{
 		FirstName: "Testing_Name" + s1,
 		LastName:  "Testing_LastName" + s1,
@@ -37,7 +37,7 @@ func InitRandomCustomer(repo *types.DbCustomerRepo) (types.CustomerPogo, string)
 func InitConcreteCustomer(repo *types.DbCustomerRepo) (types.CustomerPogo, string) {
 	rand.Seed(time.Now().UnixNano())
 	s1 := strconv.FormatInt(rand.Int63(), 10)
-	repo.Migrate()
+	repo.Initialize()
 	testCustomer := types.CustomerPogo{
 		FirstName: "Testing_Name",
 		LastName:  "Testing_LastName",
@@ -56,7 +56,7 @@ func DeleteCustomer(customer *types.Customer, repo *types.DbCustomerRepo) {
 	}
 }
 
-func DeleteAll(customer []types.Customer, repo *types.DbCustomerRepo) {
+func DeleteAllList(customer []types.Customer, repo *types.DbCustomerRepo) {
 
 	for i := range customer {
 		t := customer[i]
