@@ -60,7 +60,7 @@ func (repo *DbCustomerRepo) Migrate() {
 func (repo *DbCustomerRepo) InsertCustomer(customerPogo *CustomerPogo) (Customer, error) {
 
 	var customer Customer
-	repo.findCustomer(customerPogo, &customer)
+	repo.findCustomerByEmail(customerPogo, &customer)
 
 	if customer.ID == 0 {
 		newCustomer := Customer{
@@ -77,8 +77,13 @@ func (repo *DbCustomerRepo) InsertCustomer(customerPogo *CustomerPogo) (Customer
 }
 func (repo *DbCustomerRepo) FindCustomers(customerPogo *CustomerPogo) ([]Customer, error) {
 	var customers []Customer
-	repo.Db.Where(map[string]interface{}{"first_name": customerPogo.FirstName, "last_name": customerPogo.LastName}).Find(&customers)
+	repo.Db.Where(Customer{FirstName: customerPogo.FirstName}).Or(Customer{LastName: customerPogo.LastName}).Find(&customers)
 	return customers, nil
+}
+func (repo *DbCustomerRepo) FindCustomer(customerData int) (Customer, error) {
+	var customer Customer
+	repo.Db.Find(&customer, customerData)
+	return customer, nil
 }
 
 func (repo *DbCustomerRepo) ShowCustomers() ([]Customer, error) {
@@ -89,7 +94,7 @@ func (repo *DbCustomerRepo) ShowCustomers() ([]Customer, error) {
 
 func (repo *DbCustomerRepo) DeleteCustomer(customerPogo *CustomerPogo) error {
 	customer := Customer{}
-	repo.findCustomer(customerPogo, &customer)
+	repo.findCustomerByEmail(customerPogo, &customer)
 	if customer.ID == 0 {
 		return errors.New("ERROR: customer is not found")
 	} else {
@@ -106,9 +111,9 @@ func (repo *DbCustomerRepo) F() []Customer {
 	return customers
 }
 
-func (repo *DbCustomerRepo) UpdateCustomer(customerPogo *CustomerPogo) (Customer, error) {
+func (repo *DbCustomerRepo) UpdateCustomer(customerPogo *CustomerPogo, customerId int) (Customer, error) {
 	customer := Customer{}
-	repo.findCustomer(customerPogo, &customer)
+	repo.findCustomerById(customerId, &customer)
 	if customer.ID == 0 {
 		return Customer{}, errors.New("ERROR: customer is not found")
 	} else {
@@ -118,11 +123,16 @@ func (repo *DbCustomerRepo) UpdateCustomer(customerPogo *CustomerPogo) (Customer
 }
 
 func (repo *DbCustomerRepo) updateCustomer(customerPogo *CustomerPogo, customer Customer) *gorm.DB {
-	return repo.Db.Model(&customer).Updates(map[string]interface{}{"first_name": customerPogo.FirstName, "last_name": customerPogo.LastName})
+	return repo.Db.Model(&customer).Updates(map[string]interface{}{"first_name": customerPogo.FirstName, "last_name": customerPogo.LastName, "email": customerPogo.Email})
 }
 
-func (repo *DbCustomerRepo) findCustomer(customerPogo *CustomerPogo, customer *Customer) *gorm.DB {
+func (repo *DbCustomerRepo) findCustomerByEmail(customerPogo *CustomerPogo, customer *Customer) *gorm.DB {
 	return repo.Db.Where(CustomerPogo{Email: customerPogo.Email}).First(&customer)
+
+}
+
+func (repo *DbCustomerRepo) findCustomerById(customerId int, customer *Customer) *gorm.DB {
+	return repo.Db.First(&customer, customerId)
 
 }
 
