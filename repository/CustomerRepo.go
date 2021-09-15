@@ -47,9 +47,7 @@ func (repo *DbCustomerRepo) migrate() {
 	}
 
 }
-func (customer *Customer) ToString() string {
-	return fmt.Sprintf("ID: %v \n First name: %v \n LastName: %v", customer.ID, customer.FirstName, customer.LastName)
-}
+
 func (repo *DbCustomerRepo) Migrate() {
 	err := repo.Db.AutoMigrate(&Customer{})
 	if err != nil {
@@ -83,32 +81,10 @@ func (repo *DbCustomerRepo) FindCustomers(customerPogo *CustomerPogo) ([]Custome
 func (repo *DbCustomerRepo) FindCustomer(customerData int) (Customer, error) {
 	var customer Customer
 	repo.Db.Find(&customer, customerData)
-	return customer, nil
-}
-
-func (repo *DbCustomerRepo) ShowCustomers() ([]Customer, error) {
-	var customers []Customer
-	repo.Db.Find(&customers)
-	return customers, nil
-}
-
-func (repo *DbCustomerRepo) DeleteCustomer(customerPogo *CustomerPogo) error {
-	customer := Customer{}
-	repo.findCustomerByEmail(customerPogo, &customer)
 	if customer.ID == 0 {
-		return errors.New("ERROR: customer is not found")
-	} else {
-		repo.Db.Delete(&customer)
-		return nil
+		return Customer{}, errors.New("ERROR: customer is not found")
 	}
-
-}
-
-func (repo *DbCustomerRepo) F() []Customer {
-	var customers []Customer
-	repo.Db.Find(&customers)
-
-	return customers
+	return customer, nil
 }
 
 func (repo *DbCustomerRepo) UpdateCustomer(customerPogo *CustomerPogo, customerId int) (Customer, error) {
@@ -134,20 +110,4 @@ func (repo *DbCustomerRepo) findCustomerByEmail(customerPogo *CustomerPogo, cust
 func (repo *DbCustomerRepo) findCustomerById(customerId int, customer *Customer) *gorm.DB {
 	return repo.Db.First(&customer, customerId)
 
-}
-
-func DbConnection() (db *gorm.DB) {
-	dbHost := "localhost"
-	dbPort := 5432
-	dbUser := "postgres"
-	dbPass := "postgres"
-	dbName := "postgres"
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable", dbHost, dbPort, dbUser, dbPass, dbName)
-
-	db, err := gorm.Open(postgres.Open(psqlInfo), &gorm.Config{})
-
-	if err != nil {
-		panic(err.Error())
-	}
-	return db
 }

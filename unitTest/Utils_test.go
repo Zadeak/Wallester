@@ -42,10 +42,9 @@ func AssertListContainsCustomer(e repositorium.Customer, s []repositorium.Custom
 	t.Fatalf("List does not contain %v", e)
 	return false
 }
-func InitRandomCustomer(repo *repositorium.DbCustomerRepo) (repositorium.CustomerPogo, string) {
+func InitRandomCustomer() (repositorium.CustomerPogo, string) {
 	rand.Seed(time.Now().UnixNano())
 	s1 := strconv.FormatInt(rand.Int63(), 10)
-	repo.Initialize()
 	testCustomer := repositorium.CustomerPogo{
 		FirstName: "Testing_Name" + s1,
 		LastName:  "Testing_LastName" + s1,
@@ -53,10 +52,9 @@ func InitRandomCustomer(repo *repositorium.DbCustomerRepo) (repositorium.Custome
 	}
 	return testCustomer, s1
 }
-func InitConcreteCustomer(repo *repositorium.DbCustomerRepo) (repositorium.CustomerPogo, string) {
+func InitConcreteCustomer() (repositorium.CustomerPogo, string) {
 	rand.Seed(time.Now().UnixNano())
 	s1 := strconv.FormatInt(rand.Int63(), 10)
-	repo.Initialize()
 	testCustomer := repositorium.CustomerPogo{
 		FirstName: "Testing_Name",
 		LastName:  "Testing_LastName",
@@ -64,46 +62,7 @@ func InitConcreteCustomer(repo *repositorium.DbCustomerRepo) (repositorium.Custo
 	}
 	return testCustomer, s1
 }
-func DeleteCustomer(customer *repositorium.Customer, repo *repositorium.DbCustomerRepo) {
-	err := repo.DeleteCustomer(&repositorium.CustomerPogo{
-		FirstName: customer.FirstName,
-		LastName:  customer.LastName,
-		Email:     customer.Email,
-	})
-	if err != nil {
-		panic(err)
-	}
-}
 
-func DeleteAllList(customer []repositorium.Customer, repo *repositorium.DbCustomerRepo) {
-
-	for i := range customer {
-		t := customer[i]
-		err := repo.DeleteCustomer(&repositorium.CustomerPogo{
-			FirstName: t.FirstName,
-			LastName:  t.LastName,
-			Email:     t.Email,
-		})
-		if err != nil {
-			panic(err)
-		}
-	}
-
-}
-
-/*func TestMain(m *testing.M, repo *repositorium.DbCustomerRepo) {
-	ensureTableExists(repo)
-	code := m.Run()
-	clearTable(repo)
-	os.Exit(code)
-}
-
-func ensureTableExists(repo *repositorium.DbCustomerRepo) {
+func initRepo(repo *repositorium.DbCustomerRepo) {
 	repo.Initialize()
-
 }
-func clearTable(repo *repositorium.DbCustomerRepo) {
-	db, _ := repo.Db.DB()
-	db.Exec("DELETE FROM postgres")
-	db.Exec("ALTER SEQUENCE customers_id_seq RESTART WITH 1")
-}*/

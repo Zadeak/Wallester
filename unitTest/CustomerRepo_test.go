@@ -10,36 +10,41 @@ import (
 var repo = repositorium.DbCustomerRepo{}
 
 func TestInsertCustomer(t *testing.T) {
-	testCustomer, randomString := InitRandomCustomer(&repo)
+	initRepo(&repo)
+	testCustomer, randomString := InitRandomCustomer()
 	customer, _ := repo.InsertCustomer(&testCustomer)
 	AssertEquals("Testing_Name"+randomString, customer.FirstName, t)
 }
 
 func TestInsertCustomer_exists(t *testing.T) {
-	testCustomer, _ := InitRandomCustomer(&repo)
+	initRepo(&repo)
+	testCustomer, _ := InitRandomCustomer()
 	_, _ = repo.InsertCustomer(&testCustomer)
 	_, err := repo.InsertCustomer(&testCustomer)
 	AssertEquals("ERROR: Customer is already registered", err.Error(), t)
 }
 
 func TestUpdateCustomer(t *testing.T) {
-	testCustomer, _ := InitRandomCustomer(&repo)
+	initRepo(&repo)
+	testCustomer, _ := InitRandomCustomer()
 	customerInserted, _ := repo.InsertCustomer(&testCustomer)
 	customerUpdated, _ := repo.UpdateCustomer(mapper.CustomerMapper(customerInserted), int(customerInserted.ID))
 	AssertEquals(customerUpdated.FirstName, customerInserted.FirstName, t)
 }
 
 func TestUpdateCustomer_notFound(t *testing.T) {
-	testCustomer, _ := InitRandomCustomer(&repo)
+	initRepo(&repo)
+	testCustomer, _ := InitRandomCustomer()
 	_, err := repo.UpdateCustomer(&testCustomer, 13214125)
 	AssertEquals("ERROR: customer is not found", err.Error(), t)
 }
 
 func TestFindCustomers(t *testing.T) {
-	testCustomer1, _ := InitConcreteCustomer(&repo)
-	testCustomer2, _ := InitConcreteCustomer(&repo)
-	testCustomer3, _ := InitConcreteCustomer(&repo)
-	testCustomer4, _ := InitConcreteCustomer(&repo)
+	initRepo(&repo)
+	testCustomer1, _ := InitConcreteCustomer()
+	testCustomer2, _ := InitConcreteCustomer()
+	testCustomer3, _ := InitConcreteCustomer()
+	testCustomer4, _ := InitConcreteCustomer()
 
 	insertedCustomer1, _ := repo.InsertCustomer(&testCustomer1)
 	insertedCustomer2, _ := repo.InsertCustomer(&testCustomer2)
@@ -52,4 +57,16 @@ func TestFindCustomers(t *testing.T) {
 	AssertListContainsCustomer(insertedCustomer2, customers, t)
 	AssertListContainsCustomer(insertedCustomer3, customers, t)
 	AssertListContainsCustomer(insertedCustomer4, customers, t)
+}
+func TestFindCustomer(t *testing.T) {
+	initRepo(&repo)
+	testCustomer1, _ := InitConcreteCustomer()
+	insertedCustomer1, _ := repo.InsertCustomer(&testCustomer1)
+
+	customer, _ := repo.FindCustomer(int(insertedCustomer1.ID))
+
+	AssertEquals(testCustomer1.FirstName, customer.FirstName, t)
+	AssertEquals(testCustomer1.LastName, customer.LastName, t)
+	AssertEquals(testCustomer1.Email, customer.Email, t)
+
 }

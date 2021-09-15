@@ -26,11 +26,11 @@ func (c *Controller) InitRepo() {
 
 func (c *Controller) InitServer() {
 	c.Server.InitRouter()
-	c.initiateRoutes()
+	c.InitiateRoutes()
 	c.Server.StartServer()
 }
 
-func (c *Controller) initiateRoutes() {
+func (c *Controller) InitiateRoutes() {
 	c.Server.Router.HandleFunc("/api/search", c.searchCustomers)    //ok
 	c.Server.Router.HandleFunc("/api/id={id}", c.showCustomer)      // ok
 	c.Server.Router.HandleFunc("/api/create", c.createCustomer)     // ok
@@ -74,9 +74,15 @@ func (c *Controller) showCustomer(w http.ResponseWriter, r *http.Request) {
 
 	t, err := template.New("showCustomer.gohtml").ParseFiles("views/showCustomer.gohtml")
 
-	customer, _ := c.Repo.FindCustomer(id)
+	customer, err := c.Repo.FindCustomer(id)
+	if err != nil {
+		fmt.Fprintf(w, err.Error())
+		return
+
+	}
 	if err = t.Execute(w, &customer); err != nil {
-		fmt.Println(err)
+		fmt.Fprintf(w, err.Error())
+		return
 	}
 
 }
