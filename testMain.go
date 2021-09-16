@@ -1,6 +1,11 @@
 package main
 
+import "W/App"
+
 func main() {
-	var a = App{}
+
+	var a = App.App{}
+
 	a.Initialize()
+
 }

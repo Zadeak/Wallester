@@ -15,6 +15,5 @@ func (s *Server) InitRouter() {
 }
 
 func (s *Server) StartServer() {
-
 	log.Fatal(http.ListenAndServe(":8080", s.Router))
 }
