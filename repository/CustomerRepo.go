@@ -57,10 +57,9 @@ func (repo *DbCustomerRepo) Migrate() {
 }
 func (repo *DbCustomerRepo) InsertCustomer(customerPogo *CustomerPogo) (Customer, error) {
 
-	var customer Customer
-	repo.findCustomerByEmail(customerPogo, &customer)
+	_, err := repo.findCustomerByEmail(customerPogo)
 
-	if customer.ID == 0 {
+	if err != nil {
 		newCustomer := Customer{
 			Model:     gorm.Model{},
 			FirstName: customerPogo.FirstName,
@@ -102,8 +101,13 @@ func (repo *DbCustomerRepo) updateCustomer(customerPogo *CustomerPogo, customer 
 	return repo.Db.Model(&customer).Updates(map[string]interface{}{"first_name": customerPogo.FirstName, "last_name": customerPogo.LastName, "email": customerPogo.Email})
 }
 
-func (repo *DbCustomerRepo) findCustomerByEmail(customerPogo *CustomerPogo, customer *Customer) *gorm.DB {
-	return repo.Db.Where(CustomerPogo{Email: customerPogo.Email}).First(&customer)
+func (repo *DbCustomerRepo) findCustomerByEmail(customerPogo *CustomerPogo) (Customer, error) {
+	var customer Customer
+	repo.Db.Where(CustomerPogo{Email: customerPogo.Email}).First(&customer)
+	if customer.ID == 0 {
+		return Customer{}, errors.New("ERROR: customer is not found")
+	}
+	return customer, nil
 
 }
 

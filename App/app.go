@@ -18,4 +18,5 @@ func (a *App) start() {
 	a.Controller.InitController()
 	a.Controller.InitRepo()
 	a.Controller.InitServer()
+	a.Controller.StartServer()
 }

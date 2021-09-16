@@ -27,17 +27,20 @@ func (c *Controller) InitRepo() {
 func (c *Controller) InitServer() {
 	c.Server.InitRouter()
 	c.InitiateRoutes()
+}
+func (c *Controller) StartServer() {
 	c.Server.StartServer()
 }
 
 func (c *Controller) InitiateRoutes() {
-	c.Server.Router.HandleFunc("/api/search", c.searchCustomers)    //ok
-	c.Server.Router.HandleFunc("/api/id={id}", c.showCustomer)      // ok
-	c.Server.Router.HandleFunc("/api/create", c.createCustomer)     // ok
-	c.Server.Router.HandleFunc("/api/id={id}/edit", c.editCustomer) //ok
+	c.Server.Router.HandleFunc("/api/search", c.SearchCustomers).Methods("GET", "POST") //ok
+	c.Server.Router.HandleFunc("/api/id={id}", c.ShowCustomer)                          // ok
+	c.Server.Router.HandleFunc("/api/create", c.CreateCustomer)                         // ok
+	c.Server.Router.HandleFunc("/api/id={id}/edit", c.EditCustomer)                     //ok
+	c.Server.Router.HandleFunc("/test", c.TestHandler)
 }
 
-func (c *Controller) createCustomer(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) CreateCustomer(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 
@@ -51,7 +54,7 @@ func (c *Controller) createCustomer(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (c *Controller) searchCustomers(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) SearchCustomers(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 
@@ -62,32 +65,33 @@ func (c *Controller) searchCustomers(w http.ResponseWriter, r *http.Request) {
 	default:
 		fmt.Fprintf(w, "Sorry, only GET and POST methods are supported.")
 	}
+	return
+
 }
-func (c *Controller) showCustomer(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) ShowCustomer(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid Customer ID")
-		return
 	}
 
 	t, err := template.New("showCustomer.gohtml").ParseFiles("views/showCustomer.gohtml")
-
+	if err != nil {
+		fmt.Fprintf(w, err.Error())
+	}
 	customer, err := c.Repo.FindCustomer(id)
 	if err != nil {
 		fmt.Fprintf(w, err.Error())
-		return
 
 	}
-	if err = t.Execute(w, &customer); err != nil {
+	if err = t.Execute(w, customer); err != nil {
 		fmt.Fprintf(w, err.Error())
-		return
 	}
 
 }
 
-func (c *Controller) editCustomer(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) EditCustomer(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
@@ -97,7 +101,7 @@ func (c *Controller) editCustomer(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusBadRequest, "Invalid Customer ID")
 			return
 		}
-		t, err := template.New("editCustomer.gohtml").ParseFiles("views/editCustomer.gohtml")
+		t, err := template.New("EditCustomer.gohtml").ParseFiles("views/EditCustomer.gohtml")
 		customer, _ := c.Repo.FindCustomer(id)
 		if err = t.Execute(w, customer); err != nil {
 			fmt.Println(err)
@@ -172,6 +176,12 @@ func (c *Controller) processFormUpdate(w http.ResponseWriter, r *http.Request, c
 	}
 	http.ServeFile(w, r, "views/updateSuccess.gohtml")
 
+}
+
+func (c *Controller) TestHandler(writer http.ResponseWriter, request *http.Request) {
+	http.ServeFile(writer, request, "views/customerForm.gohtml")
+	writer.WriteHeader(http.StatusOK)
+	return
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {

@@ -10,14 +10,12 @@ import (
 var repo = repositorium.DbCustomerRepo{}
 
 func TestInsertCustomer(t *testing.T) {
-	initRepo(&repo)
 	testCustomer, randomString := InitRandomCustomer()
 	customer, _ := repo.InsertCustomer(&testCustomer)
 	AssertEquals("Testing_Name"+randomString, customer.FirstName, t)
 }
 
 func TestInsertCustomer_exists(t *testing.T) {
-	initRepo(&repo)
 	testCustomer, _ := InitRandomCustomer()
 	_, _ = repo.InsertCustomer(&testCustomer)
 	_, err := repo.InsertCustomer(&testCustomer)
@@ -25,7 +23,6 @@ func TestInsertCustomer_exists(t *testing.T) {
 }
 
 func TestUpdateCustomer(t *testing.T) {
-	initRepo(&repo)
 	testCustomer, _ := InitRandomCustomer()
 	customerInserted, _ := repo.InsertCustomer(&testCustomer)
 	customerUpdated, _ := repo.UpdateCustomer(mapper.CustomerMapper(customerInserted), int(customerInserted.ID))
@@ -33,14 +30,12 @@ func TestUpdateCustomer(t *testing.T) {
 }
 
 func TestUpdateCustomer_notFound(t *testing.T) {
-	initRepo(&repo)
 	testCustomer, _ := InitRandomCustomer()
 	_, err := repo.UpdateCustomer(&testCustomer, 13214125)
 	AssertEquals("ERROR: customer is not found", err.Error(), t)
 }
 
 func TestFindCustomers(t *testing.T) {
-	initRepo(&repo)
 	testCustomer1, _ := InitConcreteCustomer()
 	testCustomer2, _ := InitConcreteCustomer()
 	testCustomer3, _ := InitConcreteCustomer()
@@ -59,7 +54,6 @@ func TestFindCustomers(t *testing.T) {
 	AssertListContainsCustomer(insertedCustomer4, customers, t)
 }
 func TestFindCustomer(t *testing.T) {
-	initRepo(&repo)
 	testCustomer1, _ := InitConcreteCustomer()
 	insertedCustomer1, _ := repo.InsertCustomer(&testCustomer1)
 

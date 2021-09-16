@@ -1,45 +1,45 @@
 package unitTest
 
 import (
-	controller "W/controller"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
+	controller2 "W/controller"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	//"os"
 	"testing"
 )
 
-var con = controller.Controller{}
+var controller = controller2.Controller{}
 
-func TestTest(t *testing.T) {
-	//a.Initialize()
-	con.InitController()
-	con.InitiateRoutes()
+// routing testing and view response
+func TestRoutingSearch(t *testing.T) {
 
-	req, _ := http.NewRequest("GET", "/api/search", nil)
-	response := httptest.NewRecorder()
-	Router().ServeHTTP(response, req)
-	assert.Equal(t, 200, response.Code, "OK response is expected")
-
-}
-
-//
-//func executeRequest(req *http.Request) *httptest.ResponseRecorder {
-//	rr := httptest.NewRecorder()
-//	a.Controller.Server.Router.ServeHTTP(rr, req)
-//	return rr
-//}
-func checkResponseCode(t *testing.T, expected, actual int) {
-	if expected != actual {
-		t.Errorf("Expected response code %d. Got %d\n", expected, actual)
+	srv := httptest.NewServer(controller.Server.Router)
+	defer srv.Close()
+	res, err := http.Get(fmt.Sprintf("%s/api/search", srv.URL))
+	if err != nil {
+		t.Fatal(err)
 	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	bodyString := string(body)
+	println(bodyString)
+	AssertEquals(http.StatusOK, res.StatusCode, t)
 }
-func Router() *mux.Router {
-	router := mux.NewRouter()
-	router.HandleFunc("/create", CreateEndpoint).Methods("GET")
-	return router
-}
-func CreateEndpoint(w http.ResponseWriter, req *http.Request) {
-	w.WriteHeader(200)
-	w.Write([]byte("Item Created"))
+
+func TestRoutingShowCustomer(t *testing.T) {
+	customer, _ := InitRandomCustomer()
+	insertedCustomer, _ := repo.InsertCustomer(&customer)
+
+	req, _ := http.NewRequest("GET", fmt.Sprintf("/api/id=%v", insertedCustomer.ID), nil)
+	responseRecorder := httptest.NewRecorder()
+	controller.Server.Router.ServeHTTP(responseRecorder, req)
+
+	s := responseRecorder.Body.String()
+
+	println(s)
+	AssertContains(insertedCustomer.FirstName, s, t)
+	AssertEquals(http.StatusOK, responseRecorder.Code, t)
+
 }
