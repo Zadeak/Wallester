@@ -42,19 +42,3 @@ func TestRoutesAndResponse(t *testing.T) {
 	})
 
 }
-
-//func TestRoutingShowCustomer(t *testing.T) {
-//	customer, _ := InitRandomCustomer()
-//	insertedCustomer, _ := repo.InsertCustomer(&customer)
-//
-//	req, _ := http.NewRequest("GET", fmt.Sprintf("/api/id=%v", insertedCustomer.ID), nil)
-//	responseRecorder := httptest.NewRecorder()
-//	controller.Server.Router.ServeHTTP(responseRecorder, req)
-//
-//	s := responseRecorder.Body.String()
-//
-//	println(s)
-//	AssertContains(insertedCustomer.FirstName, s, t)
-//	AssertEquals(http.StatusOK, responseRecorder.Code, t)
-//
-//}
