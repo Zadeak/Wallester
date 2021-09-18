@@ -43,7 +43,7 @@ func (repo *DbCustomerRepo) Initialize() {
 func (repo *DbCustomerRepo) migrate() {
 	err := repo.Db.AutoMigrate(&Customer{})
 	if err != nil {
-		return
+		panic(err.Error())
 	}
 
 }
