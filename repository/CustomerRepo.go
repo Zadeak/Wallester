@@ -92,13 +92,20 @@ func (repo *DbCustomerRepo) UpdateCustomer(customerPogo *CustomerPogo, customerI
 	if customer.ID == 0 {
 		return Customer{}, errors.New("ERROR: customer is not found")
 	} else {
-		repo.updateCustomer(customerPogo, customer)
+		repo.updateCustomer(customerPogo, &customer)
 		return customer, nil
 	}
 }
 
-func (repo *DbCustomerRepo) updateCustomer(customerPogo *CustomerPogo, customer Customer) *gorm.DB {
-	return repo.Db.Model(&customer).Updates(map[string]interface{}{"first_name": customerPogo.FirstName, "last_name": customerPogo.LastName, "email": customerPogo.Email})
+func (repo *DbCustomerRepo) updateCustomer(customerPogo *CustomerPogo, customer *Customer) *Customer {
+
+	repo.Db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&customer).Updates(map[string]interface{}{"first_name": customerPogo.FirstName, "last_name": customerPogo.LastName, "email": customerPogo.Email}).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+	return customer
 }
 
 func (repo *DbCustomerRepo) findCustomerByEmail(customerPogo *CustomerPogo) (Customer, error) {
