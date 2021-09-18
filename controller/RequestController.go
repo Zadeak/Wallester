@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"html/template"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -38,6 +39,7 @@ func (c *Controller) InitiateRoutes() {
 	c.Server.Router.HandleFunc("/api/create", c.CreateCustomer)                         // ok
 	c.Server.Router.HandleFunc("/api/id={id}/edit", c.EditCustomer)                     //ok
 	c.Server.Router.HandleFunc("/test", c.TestHandler)
+	c.Server.Router.HandleFunc("/test/page={id}", c.TestHandler)
 }
 
 func (c *Controller) CreateCustomer(w http.ResponseWriter, r *http.Request) {
@@ -179,8 +181,19 @@ func (c *Controller) processFormUpdate(w http.ResponseWriter, r *http.Request, c
 }
 
 func (c *Controller) TestHandler(writer http.ResponseWriter, request *http.Request) {
-	http.ServeFile(writer, request, "views/customerForm.gohtml")
-	writer.WriteHeader(http.StatusOK)
+
+	vars := mux.Vars(request)
+	page, _ := vars["id"]
+	intVar, _ := strconv.Atoi(page)
+	println(page)
+
+	list, _ := c.Repo.List(repository.Pagination{
+		Page: intVar,
+	})
+	tpl := template.Must(template.ParseGlob("views/*.gohtml"))
+	if err := tpl.ExecuteTemplate(writer, "pagination.gohtml", list); err != nil {
+		log.Println(err)
+	}
 	return
 }
 
@@ -202,10 +215,3 @@ func checkForm(w http.ResponseWriter, r *http.Request) bool {
 	}
 	return false
 }
-
-//t, err := template.New("customerForm.gohtml").ParseFiles("views/customerForm.gohtml")
-//
-//customers, _ := c.Repo.ShowCustomers()
-//if err = t.Execute(w, map[string][]repository.Customer{"customers": customers}); err != nil {
-//	fmt.Println(err)
-//}

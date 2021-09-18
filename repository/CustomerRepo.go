@@ -24,6 +24,14 @@ type DbCustomerRepo struct {
 	Db *gorm.DB
 }
 
+func (repo *DbCustomerRepo) List(pagination Pagination) (*Pagination, error) {
+	var customers []*Customer
+	repo.Db.Scopes(paginate(customers, &pagination, repo.Db)).Find(&customers)
+	pagination.Rows = customers
+
+	return &pagination, nil
+}
+
 func (repo *DbCustomerRepo) Initialize() {
 	dbHost := "localhost"
 	dbPort := 5432
@@ -98,7 +106,6 @@ func (repo *DbCustomerRepo) UpdateCustomer(customerPogo *CustomerPogo, customerI
 }
 
 func (repo *DbCustomerRepo) updateCustomer(customerPogo *CustomerPogo, customer *Customer) *Customer {
-
 	repo.Db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&customer).Updates(map[string]interface{}{"first_name": customerPogo.FirstName, "last_name": customerPogo.LastName, "email": customerPogo.Email}).Error; err != nil {
 			return err
