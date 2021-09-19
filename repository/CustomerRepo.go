@@ -24,9 +24,9 @@ type DbCustomerRepo struct {
 	Db *gorm.DB
 }
 
-func (repo *DbCustomerRepo) List(pagination Pagination) (*Pagination, error) {
+func (repo *DbCustomerRepo) List(pagination Pagination, customerPogo *CustomerPogo) (*Pagination, error) {
 	var customers []*Customer
-	repo.Db.Scopes(paginate(customers, &pagination, repo.Db)).Find(&customers)
+	repo.Db.Scopes(paginate(customers, customerPogo, &pagination, repo.Db)).Where(Customer{FirstName: customerPogo.FirstName}).Or(Customer{LastName: customerPogo.LastName}).Find(&customers)
 	pagination.Rows = customers
 
 	return &pagination, nil

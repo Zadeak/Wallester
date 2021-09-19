@@ -6,7 +6,7 @@ import (
 	"math"
 )
 
-// Pagination TODO: test pagination
+// Pagination TODO: test pagination,
 type Pagination struct {
 	Limit        int         `json:"limit,omitempty;query:limit"`
 	Page         int         `json:"page,omitempty;query:page"`
@@ -14,6 +14,8 @@ type Pagination struct {
 	PreviousPage int         `json:"previous-page,omitempty;query:page"`
 	FirstPage    int         `json:"first_page,omitempty;query:page"`
 	LastPage     int         `json:"last-page,omitempty;query:page"`
+	Name         string      // TODO separate logic of holding and passing query params
+	LastName     string      // TODO separate logic of holding and passing query params
 	Sort         string      `json:"sort,omitempty;query:sort"`
 	TotalRows    int64       `json:"total_rows"`
 	TotalPages   int         `json:"total_pages"`
@@ -63,9 +65,9 @@ func (p *Pagination) GetSort() string {
 	return p.Sort
 }
 
-func paginate(value interface{}, pagination *Pagination, db *gorm.DB) func(db *gorm.DB) *gorm.DB {
+func paginate(value interface{}, customerPogo *CustomerPogo, pagination *Pagination, db *gorm.DB) func(db *gorm.DB) *gorm.DB {
 	var totalRows int64
-	db.Model(value).Count(&totalRows)
+	db.Model(value).Where("first_name =?", customerPogo.FirstName).Or("last_name = ?", customerPogo.LastName).Count(&totalRows)
 	pagination.TotalRows = totalRows
 	totalPages := int(math.Ceil(float64(totalRows) / float64(pagination.GetLimit())))
 	pagination.Page = pagination.GetPage()

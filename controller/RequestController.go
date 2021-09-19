@@ -38,8 +38,8 @@ func (c *Controller) InitiateRoutes() {
 	c.Server.Router.HandleFunc("/api/id={id}", c.ShowCustomer)                          // ok
 	c.Server.Router.HandleFunc("/api/create", c.CreateCustomer)                         // ok
 	c.Server.Router.HandleFunc("/api/id={id}/edit", c.EditCustomer)                     //ok
-	c.Server.Router.HandleFunc("/test", c.TestHandler)
-	c.Server.Router.HandleFunc("/test/page={id}", c.TestHandler)
+	c.Server.Router.HandleFunc("/test", c.StartPaginationHandler)
+	c.Server.Router.HandleFunc("/test/page={id}", c.ContinuePaginationHandler)
 }
 
 func (c *Controller) CreateCustomer(w http.ResponseWriter, r *http.Request) {
@@ -180,15 +180,59 @@ func (c *Controller) processFormUpdate(w http.ResponseWriter, r *http.Request, c
 
 }
 
-func (c *Controller) TestHandler(writer http.ResponseWriter, request *http.Request) {
-
+func (c *Controller) ContinuePaginationHandler(writer http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
 	page, _ := vars["id"]
 	intVar, _ := strconv.Atoi(page)
-	println(page)
+	name := request.URL.Query().Get("name")
+	lastName := request.URL.Query().Get("last-name")
 
 	list, _ := c.Repo.List(repository.Pagination{
-		Page: intVar,
+		Page:     intVar,
+		Name:     name,
+		LastName: lastName,
+	}, &repository.CustomerPogo{
+		FirstName: name,
+		LastName:  lastName,
+	})
+	tpl := template.Must(template.ParseGlob("views/*.gohtml"))
+	if err := tpl.ExecuteTemplate(writer, "pagination.gohtml", list); err != nil {
+		log.Println(err)
+	}
+	return
+}
+
+func (c *Controller) StartPaginationHandler(writer http.ResponseWriter, request *http.Request) {
+	switch request.Method {
+
+	case "GET":
+		http.ServeFile(writer, request, "views/searchCustomersForm.html")
+	case "POST":
+		displayFirstSearchPage(writer, request, c)
+		return
+
+	default:
+		fmt.Fprintf(writer, "Sorry, only GET and POST methods are supported.")
+	}
+}
+
+func displayFirstSearchPage(writer http.ResponseWriter, request *http.Request, c *Controller) {
+	request.FormValue("fname")
+	request.FormValue("lname")
+	vars := mux.Vars(request)
+	page, _ := vars["id"]
+	intVar, _ := strconv.Atoi(page)
+
+	nameValue := request.FormValue("fname")
+	lastNameValue := request.FormValue("lname")
+
+	list, _ := c.Repo.List(repository.Pagination{
+		Page:     intVar,
+		Name:     nameValue,
+		LastName: lastNameValue,
+	}, &repository.CustomerPogo{
+		FirstName: nameValue,
+		LastName:  lastNameValue,
 	})
 	tpl := template.Must(template.ParseGlob("views/*.gohtml"))
 	if err := tpl.ExecuteTemplate(writer, "pagination.gohtml", list); err != nil {
