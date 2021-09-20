@@ -29,17 +29,17 @@
 
 
 <div class="pagination">
-    <a href="/test/page={{.FirstPage}}?name={{ .Name }}&last-name={{ .LastName}}">First</a>
+    <a href="/api/search/page={{.FirstPage}}?name={{ .Name }}&last-name={{ .LastName}}">First</a>
     {{if and (.PreviousPage) (ne .PreviousPage -1)}}
-        <a href="/test/page={{.PreviousPage}}?name={{ .Name }}&last-name={{ .LastName }}">Previous</a>
+        <a href="/api/search/page={{.PreviousPage}}?name={{ .Name }}&last-name={{ .LastName }}">Previous</a>
     {{end}}
     {{if and (.NextPage) (ne .NextPage -1) }}
-        <a href="/test/page={{.NextPage}}?name={{ .Name }}&last-name={{ .LastName }}">Next</a>
+        <a href="/api/search/page={{.NextPage}}?name={{ .Name }}&last-name={{ .LastName }}">Next</a>
 
     {{end}}
 
     {{if ne (.LastPage)  (.Page)}}
-    <a href="/test/page={{.LastPage}}?name={{ .Name }}&last-name={{ .LastName }}">Last</a>
+    <a href="/api/search/page=={{.LastPage}}?name={{ .Name }}&last-name={{ .LastName }}">Last</a>
     {{end}}
 </div>
 

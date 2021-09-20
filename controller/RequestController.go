@@ -34,12 +34,10 @@ func (c *Controller) StartServer() {
 }
 
 func (c *Controller) InitiateRoutes() {
-	c.Server.Router.HandleFunc("/api/search", c.SearchCustomers).Methods("GET", "POST") //ok
-	c.Server.Router.HandleFunc("/api/id={id}", c.ShowCustomer)                          // ok
-	c.Server.Router.HandleFunc("/api/create", c.CreateCustomer)                         // ok
-	c.Server.Router.HandleFunc("/api/id={id}/edit", c.EditCustomer)                     //ok
-	c.Server.Router.HandleFunc("/test", c.StartPaginationHandler)
-	c.Server.Router.HandleFunc("/test/page={id}", c.ContinuePaginationHandler)
+	c.Server.Router.HandleFunc("/api/search", c.StartPaginationHandler).Methods("GET", "POST") //ok
+	c.Server.Router.HandleFunc("/api/search/page={id}", c.ContinuePaginationHandler)           // ok
+	c.Server.Router.HandleFunc("/api/create", c.CreateCustomer)                                // ok
+	c.Server.Router.HandleFunc("/api/id={id}/edit", c.EditCustomer)                            //ok
 }
 
 func (c *Controller) CreateCustomer(w http.ResponseWriter, r *http.Request) {
