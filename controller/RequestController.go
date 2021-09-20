@@ -38,6 +38,7 @@ func (c *Controller) InitiateRoutes() {
 	c.Server.Router.HandleFunc("/api/search/page={id}", c.ContinuePaginationHandler)           // ok
 	c.Server.Router.HandleFunc("/api/create", c.CreateCustomer)                                // ok
 	c.Server.Router.HandleFunc("/api/id={id}/edit", c.EditCustomer)                            //ok
+	c.Server.Router.HandleFunc("/api/id={id}", c.ShowCustomer)
 }
 
 func (c *Controller) CreateCustomer(w http.ResponseWriter, r *http.Request) {
@@ -54,20 +55,6 @@ func (c *Controller) CreateCustomer(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (c *Controller) SearchCustomers(w http.ResponseWriter, r *http.Request) {
-
-	switch r.Method {
-
-	case "GET":
-		http.ServeFile(w, r, "views/searchCustomersForm.html")
-	case "POST":
-		c.processSearchForm(w, r)
-	default:
-		fmt.Fprintf(w, "Sorry, only GET and POST methods are supported.")
-	}
-	return
-
-}
 func (c *Controller) ShowCustomer(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
@@ -136,28 +123,6 @@ func (c *Controller) processForm(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "ParseForm() err: %v", err)
 	}
 	http.ServeFile(w, r, "views/submitSuccess.gohtml")
-}
-
-func (c *Controller) processSearchForm(w http.ResponseWriter, r *http.Request) {
-	if checkForm(w, r) {
-		return
-	}
-
-	customers, err := c.Repo.FindCustomers(&repository.CustomerPogo{
-		FirstName: r.FormValue("fname"),
-		LastName:  r.FormValue("lname"),
-		Email:     "",
-	})
-
-	if err != nil {
-		//:TODO
-	}
-	t, err := template.New("showAllCustomers.gohtml").ParseFiles("views/showAllCustomers.gohtml")
-
-	if err = t.Execute(w, map[string][]repository.Customer{"customers": customers}); err != nil {
-		fmt.Println(err)
-	}
-
 }
 
 func (c *Controller) processFormUpdate(w http.ResponseWriter, r *http.Request, customer *repository.Customer) {
