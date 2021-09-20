@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"html/template"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -33,11 +34,10 @@ func (c *Controller) StartServer() {
 }
 
 func (c *Controller) InitiateRoutes() {
-	c.Server.Router.HandleFunc("/api/search", c.SearchCustomers).Methods("GET", "POST") //ok
-	c.Server.Router.HandleFunc("/api/id={id}", c.ShowCustomer)                          // ok
-	c.Server.Router.HandleFunc("/api/create", c.CreateCustomer)                         // ok
-	c.Server.Router.HandleFunc("/api/id={id}/edit", c.EditCustomer)                     //ok
-	c.Server.Router.HandleFunc("/test", c.TestHandler)
+	c.Server.Router.HandleFunc("/api/search", c.StartPaginationHandler).Methods("GET", "POST") //ok
+	c.Server.Router.HandleFunc("/api/search/page={id}", c.ContinuePaginationHandler)           // ok
+	c.Server.Router.HandleFunc("/api/create", c.CreateCustomer)                                // ok
+	c.Server.Router.HandleFunc("/api/id={id}/edit", c.EditCustomer)                            //ok
 }
 
 func (c *Controller) CreateCustomer(w http.ResponseWriter, r *http.Request) {
@@ -178,9 +178,64 @@ func (c *Controller) processFormUpdate(w http.ResponseWriter, r *http.Request, c
 
 }
 
-func (c *Controller) TestHandler(writer http.ResponseWriter, request *http.Request) {
-	http.ServeFile(writer, request, "views/customerForm.gohtml")
-	writer.WriteHeader(http.StatusOK)
+func (c *Controller) ContinuePaginationHandler(writer http.ResponseWriter, request *http.Request) {
+	vars := mux.Vars(request)
+	page, _ := vars["id"]
+	intVar, _ := strconv.Atoi(page)
+	name := request.URL.Query().Get("name")
+	lastName := request.URL.Query().Get("last-name")
+
+	list, _ := c.Repo.List(repository.Pagination{
+		Page:     intVar,
+		Name:     name,
+		LastName: lastName,
+	}, &repository.CustomerPogo{
+		FirstName: name,
+		LastName:  lastName,
+	})
+	tpl := template.Must(template.ParseGlob("views/*.gohtml"))
+	if err := tpl.ExecuteTemplate(writer, "pagination.gohtml", list); err != nil {
+		log.Println(err)
+	}
+	return
+}
+
+func (c *Controller) StartPaginationHandler(writer http.ResponseWriter, request *http.Request) {
+	switch request.Method {
+
+	case "GET":
+		http.ServeFile(writer, request, "views/searchCustomersForm.html")
+	case "POST":
+		displayFirstSearchPage(writer, request, c)
+		return
+
+	default:
+		fmt.Fprintf(writer, "Sorry, only GET and POST methods are supported.")
+	}
+}
+
+func displayFirstSearchPage(writer http.ResponseWriter, request *http.Request, c *Controller) {
+	request.FormValue("fname")
+	request.FormValue("lname")
+	vars := mux.Vars(request)
+	page, _ := vars["id"]
+	intVar, _ := strconv.Atoi(page)
+
+	nameValue := request.FormValue("fname")
+	lastNameValue := request.FormValue("lname")
+
+	list, _ := c.Repo.List(repository.Pagination{
+		Page:     intVar,
+		Name:     nameValue,
+		LastName: lastNameValue,
+	}, &repository.CustomerPogo{
+		FirstName: nameValue,
+		LastName:  lastNameValue,
+	})
+	tpl := template.Must(template.ParseGlob("views/*.gohtml"))
+	if err := tpl.ExecuteTemplate(writer, "pagination.gohtml", list); err != nil {
+		log.Println(err)
+	}
 	return
 }
 
@@ -202,10 +257,3 @@ func checkForm(w http.ResponseWriter, r *http.Request) bool {
 	}
 	return false
 }
-
-//t, err := template.New("customerForm.gohtml").ParseFiles("views/customerForm.gohtml")
-//
-//customers, _ := c.Repo.ShowCustomers()
-//if err = t.Execute(w, map[string][]repository.Customer{"customers": customers}); err != nil {
-//	fmt.Println(err)
-//}

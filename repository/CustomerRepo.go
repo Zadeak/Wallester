@@ -24,6 +24,14 @@ type DbCustomerRepo struct {
 	Db *gorm.DB
 }
 
+func (repo *DbCustomerRepo) List(pagination Pagination, customerPogo *CustomerPogo) (*Pagination, error) {
+	var customers []*Customer
+	repo.Db.Scopes(paginate(customers, customerPogo, &pagination, repo.Db)).Where(Customer{FirstName: customerPogo.FirstName}).Or(Customer{LastName: customerPogo.LastName}).Find(&customers)
+	pagination.Rows = customers
+
+	return &pagination, nil
+}
+
 func (repo *DbCustomerRepo) Initialize() {
 	dbHost := "localhost"
 	dbPort := 5432
@@ -43,7 +51,7 @@ func (repo *DbCustomerRepo) Initialize() {
 func (repo *DbCustomerRepo) migrate() {
 	err := repo.Db.AutoMigrate(&Customer{})
 	if err != nil {
-		return
+		panic(err.Error())
 	}
 
 }
@@ -92,13 +100,19 @@ func (repo *DbCustomerRepo) UpdateCustomer(customerPogo *CustomerPogo, customerI
 	if customer.ID == 0 {
 		return Customer{}, errors.New("ERROR: customer is not found")
 	} else {
-		repo.updateCustomer(customerPogo, customer)
+		repo.updateCustomer(customerPogo, &customer)
 		return customer, nil
 	}
 }
 
-func (repo *DbCustomerRepo) updateCustomer(customerPogo *CustomerPogo, customer Customer) *gorm.DB {
-	return repo.Db.Model(&customer).Updates(map[string]interface{}{"first_name": customerPogo.FirstName, "last_name": customerPogo.LastName, "email": customerPogo.Email})
+func (repo *DbCustomerRepo) updateCustomer(customerPogo *CustomerPogo, customer *Customer) *Customer {
+	repo.Db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&customer).Updates(map[string]interface{}{"first_name": customerPogo.FirstName, "last_name": customerPogo.LastName, "email": customerPogo.Email}).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+	return customer
 }
 
 func (repo *DbCustomerRepo) findCustomerByEmail(customerPogo *CustomerPogo) (Customer, error) {

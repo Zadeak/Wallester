@@ -43,8 +43,7 @@ func AssertEquals(expected interface{}, actual interface{}, t *testing.T) {
 
 func AssertContains(expected string, res string, t *testing.T) {
 	if strings.Contains(strings.ReplaceAll(stripHtmlTags(res), "\n", ""), expected) {
-		print("Pass")
-		return
+		t.Logf("Pass")
 	} else {
 		t.Fatalf("Reponse body did not contain %s", expected)
 	}
